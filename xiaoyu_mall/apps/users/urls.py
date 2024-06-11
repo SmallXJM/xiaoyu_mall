@@ -23,5 +23,7 @@ urlpatterns = [
     path('addresses/<int:address_id>/default/', views.DefaultAddressView.as_view()),
     # 设置标题
     path('addresses/<int:address_id>/title/', views.UpdateTitleAddressView.as_view()),
+    # 修改密码
+    path('editpassword/', views.ChangePasswordView.as_view(), name='editpwd'),
     path('emails/', views.EmailView.as_view())
 ]

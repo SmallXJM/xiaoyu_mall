@@ -9,7 +9,7 @@ INFO 2024-03-19 16:56:22,841 basehttp 212 "GET /static/images/adv01.jpg HTTP/1.1
 INFO 2024-03-19 16:56:23,671 basehttp 212 "GET /static/images/adv01.jpg HTTP/1.1" 304 0
 INFO 2024-03-19 16:56:23,889 basehttp 212 "GET /static/images/adv01.jpg HTTP/1.1" 304 0
 INFO 2024-03-19 16:56:24,086 basehttp 212 "GET /static/images/adv01.jpg HTTP/1.1" 304 0
-INFO 2024-03-19 16:56:24,285 basehttp 212 "GET /static/images/adv01.jpg HTTP/1.1" 304 0
+INFO 2024-03-19 16:56:24,285 basehttp 212 "GET /static/images/adv01.jpg HTTP/1.1" 304 1
 INFO 2024-03-19 16:56:26,728 basehttp 212 "GET / HTTP/1.1" 200 10664
 INFO 2024-03-19 16:56:43,127 autoreload 668 Watching for file changes with StatReloader
 INFO 2024-03-19 16:57:38,195 autoreload 266 D:\changzhi\python\laowang_mall\laowang_mall\settings\dev.py changed, reloading.

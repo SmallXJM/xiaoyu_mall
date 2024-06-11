@@ -3,7 +3,8 @@ from collections import OrderedDict
 from django.shortcuts import render
 from django.views import View
 
-from xiaoyu_mall.apps.goods.models import GoodsChannel
+from contents.models import ContentCategory
+from goods.models import GoodsChannel
 
 
 class IndexView(View):
@@ -32,8 +33,19 @@ class IndexView(View):
                     cat2.sub_cats.append(cat3)
                 # 将二级类别添加到一级类别的sub_cats
                 categories[group_id]['sub_cats'].append(cat2)
+
+        # 查询所有的广告类别
+        contents = OrderedDict()
+        content_categories = ContentCategory.objects.all()
+
+        for content_category in content_categories:
+            contents[content_category.key] = \
+                content_category.content_set.filter(
+                    status=True).order_by('sequence')
+
         # 渲染模板的上下文
         context = {
             'categories': categories,
+            'contents': contents
         }
         return render(request, 'index.html', context)

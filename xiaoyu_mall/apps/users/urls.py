@@ -25,5 +25,10 @@ urlpatterns = [
     path('addresses/<int:address_id>/title/', views.UpdateTitleAddressView.as_view()),
     # 修改密码
     path('editpassword/', views.ChangePasswordView.as_view(), name='editpwd'),
-    path('emails/', views.EmailView.as_view())
+    path('emails/', views.EmailView.as_view()),
+    # 浏览记录
+    path('browse_histories/', views.UserBrowseHistory.as_view()),
+    # 全部订单
+    path('orders/info/<int:page_num>/', views.UserOrderInfoView.as_view(), name='myorderinfo'),
+
 ]

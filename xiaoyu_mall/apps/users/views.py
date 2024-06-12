@@ -1,11 +1,18 @@
+from django.conf import settings
+from django.core.paginator import Paginator, EmptyPage
 from django.shortcuts import render, redirect, reverse
 import logging
 
+from django_redis import get_redis_connection
+
+from orders.models import OrderInfo
+from goods.models import SKU
+
 logger = logging.getLogger('django')
 from django.views import View
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse, HttpResponseNotFound
 import re, json
-from .models import User, Address
+from users.models import User, Address
 from django.db import DatabaseError
 from django.contrib.auth.mixins import LoginRequiredMixin
 from xiaoyu_mall.utils.views import LoginRequiredJSONMixin
@@ -391,3 +398,90 @@ class ChangePasswordView(LoginRequiredMixin, View):
         response.delete_cookie('username')
         # 响应密码修改结果：重定向到登录界面
         return response
+
+
+class UserOrderInfoView(LoginRequiredMixin, View):
+    def get(self, request, page_num):
+        """提供我的订单页面"""
+        user = request.user
+        # 查询订单
+        orders = user.orderinfo_set.all().order_by("-create_time")
+        # 遍历所有订单
+        for order in orders:
+            # 绑定订单状态
+            order.status_name = OrderInfo.ORDER_STATUS_CHOICES[order.status - 1][1]
+            # 绑定支付方式
+            order.pay_method_name = OrderInfo.PAY_METHOD_CHOICES[order.pay_method - 1][1]
+            order.sku_list = []
+            # 查询订单商品
+            order_goods = order.skus.all()
+            # 遍历订单商品
+            for order_good in order_goods:
+                sku = order_good.sku
+                sku.count = order_good.count
+                sku.amount = sku.price * sku.count
+                order.sku_list.append(sku)
+
+        # 分页
+        page_num = int(page_num)
+        try:
+            paginator = Paginator(orders, constants.ORDERS_LIST_LIMIT)
+            page_orders = paginator.page(page_num)
+            total_page = paginator.num_pages
+        except EmptyPage:
+            return HttpResponseNotFound('订单不存在')
+
+        context = {
+            "page_orders": page_orders,
+            'total_page': total_page,
+            'page_num': page_num,
+        }
+        return render(request, "user_center_order.html", context)
+
+
+class UserBrowseHistory(LoginRequiredJSONMixin, View):
+    """用户浏览记录"""
+
+    def post(self, request):
+        """保存用户商品浏览记录"""
+        # 接收参数
+        json_dict = json.loads(request.body.decode())
+        sku_id = json_dict.get('sku_id')
+        # 校验参数
+        try:
+            SKU.objects.get(id=sku_id)
+        except SKU.DoesNotExist:
+            return HttpResponseForbidden('sku不存在')
+        # 保存sku_id到redis
+        redis_conn = get_redis_connection('history')
+        pl = redis_conn.pipeline()
+        user_id = request.user.id
+        # 先去重
+        pl.lrem('history_%s' % user_id, 0, sku_id)
+        # 再存储
+        pl.lpush('history_%s' % user_id, sku_id)
+        # 最后截取
+        pl.ltrim('history_%s' % user_id, 0, 4)
+        # 执行管道
+        pl.execute()
+        # 响应结果
+        return JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK'})
+
+    """用户浏览记录"""
+
+    def get(self, request):
+        """获取用户浏览记录"""
+        # 获取Redis存储的sku_id列表信息
+        redis_conn = get_redis_connection('history')
+        sku_ids = redis_conn.lrange('history_%s' % request.user.id, 0, -1)
+        # 根据sku_ids列表数据，查询出商品sku信息
+        skus = []
+        for sku_id in sku_ids:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append({
+                'id': sku.id,
+                'name': sku.name,
+                'default_image_url': settings.STATIC_URL + 'images/goods/' + sku.default_image.url + '.jpg',
+                'price': sku.price
+            })
+        return JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK', 'skus': skus})

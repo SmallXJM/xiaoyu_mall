@@ -255,7 +255,7 @@ class CartsView(View):
                 'name': sku.name,
                 'price': sku.price,
                 'amount': sku.price * count,
-                'default_image_url': settings.STATIC_URL + 'data_images/' + sku.default_image.url + '.jpg',
+                'default_image_url': settings.STATIC_URL + 'images/goods/' + sku.default_image.url + '.jpg',
             }
             return JsonResponse({'code': RETCODE.OK, 'errmsg': '修改购物车成功', 'cart_sku': cart_sku})
         else:

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+
 app_name = 'carts'
 urlpatterns = [
     # 购物车管理
@@ -8,8 +9,6 @@ urlpatterns = [
     path('carts/selection/', views.CartsSelectAllView.as_view()),
     # 简单购物车
     path('carts/simple/', views.CartsSimpleView.as_view()),
-    #购物车略缩信息
-    path('carts/simple/',views.CartsSimpleView.as_view()),
-    #订单结算
+    # 订单结算
     # path('', include('orders.urls', namespace='orders')),
 ]
